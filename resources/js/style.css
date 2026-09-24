@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Vue Flow overrides ──────────────────────────────────────────────── */
+.vue-flow__renderer { background: transparent; }
+
+.vue-flow__background {
+    background-color: #050a14;
+}
+
+.vue-flow__minimap {
+    background: #0d1526;
+    border: 1px solid #1e3a5f;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.vue-flow__minimap-mask { fill: rgba(5,10,20,0.6); }
+.vue-flow__minimap-node { fill: #1e3a5f; stroke: none; }
+
+.vue-flow__controls {
+    box-shadow: none;
+    gap: 4px;
+}
+
+.vue-flow__controls-button {
+    background: #0d1526 !important;
+    border: 1px solid #1e3a5f !important;
+    color: #94a3b8 !important;
+    border-radius: 6px !important;
+    width: 28px !important;
+    height: 28px !important;
+    transition: all 0.15s;
+}
+
+.vue-flow__controls-button:hover {
+    background: #162a4a !important;
+    border-color: #00d4ff !important;
+    color: #00d4ff !important;
+}
+
+.vue-flow__edge-path {
+    stroke-width: 1.5;
+}
+
+.vue-flow__edge.animated .vue-flow__edge-path {
+    animation: dashdraw 0.5s linear infinite;
+}
+
+.vue-flow__edge-text {
+    fill: #94a3b8;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.vue-flow__selection {
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.vue-flow__nodesselection-rect {
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid rgba(0, 212, 255, 0.4);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0d1526; }
+::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #2d5a8e; }
+
+/* ── Transitions ─────────────────────────────────────────────────────── */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.slide-right-enter-active, .slide-right-leave-active { transition: transform 0.25s ease, opacity 0.25s ease; }
+.slide-right-enter-from { transform: translateX(16px); opacity: 0; }
+.slide-right-leave-to  { transform: translateX(16px); opacity: 0; }
+
+.slide-up-enter-active, .slide-up-leave-active { transition: transform 0.2s ease, opacity 0.2s ease; }
+.slide-up-enter-from { transform: translateY(8px); opacity: 0; }
+.slide-up-leave-to  { transform: translateY(8px); opacity: 0; }
+
+/* ── Utility classes ─────────────────────────────────────────────────── */
+.lv-badge {
+    @apply inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono font-medium;
+}
+
+.lv-btn {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium
+           transition-all duration-150 select-none cursor-pointer;
+}
+
+.lv-btn-ghost {
+    @apply lv-btn text-slate-400 hover:text-slate-100 hover:bg-canvas-hover;
+}
+
+.lv-btn-primary {
+    @apply lv-btn bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30
+           hover:bg-accent-cyan/20 hover:border-accent-cyan/60;
+}
+
+.lv-panel {
+    @apply bg-canvas-panel border border-canvas-border rounded-xl shadow-panel;
+}
+
+.lv-tag-method-get    { @apply lv-badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20; }
+.lv-tag-method-post   { @apply lv-badge bg-blue-500/10    text-blue-400    border border-blue-500/20; }
+.lv-tag-method-put    { @apply lv-badge bg-amber-500/10   text-amber-400   border border-amber-500/20; }
+.lv-tag-method-patch  { @apply lv-badge bg-orange-500/10  text-orange-400  border border-orange-500/20; }
+.lv-tag-method-delete { @apply lv-badge bg-red-500/10     text-red-400     border border-red-500/20; }
+
+@keyframes dashdraw {
+    to { stroke-dashoffset: -8; }
+}
+
+@keyframes nodeGlow {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(0,212,255,0.2), 0 4px 24px rgba(0,0,0,0.4); }
+    50%       { box-shadow: 0 0 0 1px rgba(0,212,255,0.5), 0 0 30px rgba(0,212,255,0.15), 0 4px 24px rgba(0,0,0,0.4); }
+}
+
+.node-pulse { animation: nodeGlow 3s ease-in-out infinite; }
