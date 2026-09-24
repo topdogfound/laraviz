@@ -21,7 +21,7 @@ Route::middleware($middleware)
         Route::get('/services',   [LaraVizApiController::class, 'services'])->name('services');
         Route::get('/events',     [LaraVizApiController::class, 'events'])->name('events');
         Route::get('/jobs',       [LaraVizApiController::class, 'jobs'])->name('jobs');
-        Route::get('/middleware', [LaraVizApiController::class, 'middleware'])->name('middleware');
+        Route::get('/middleware', [LaraVizApiController::class, 'middlewareInfo'])->name('middleware');
         Route::get('/config',     [LaraVizApiController::class, 'config'])->name('config');
 
         // Cache management

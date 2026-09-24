@@ -7,6 +7,9 @@ export default defineConfig({
         vue(),
     ],
 
+    // All built assets will be served from /vendor/laraviz/
+    base: '/vendor/laraviz/',
+
     resolve: {
         alias: {
             '@': resolve(__dirname, 'resources/js'),

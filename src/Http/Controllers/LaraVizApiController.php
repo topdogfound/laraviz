@@ -124,7 +124,7 @@ class LaraVizApiController extends Controller
     /**
      * Return only the middleware section.
      */
-    public function middleware(): JsonResponse
+    public function middlewareInfo(): JsonResponse
     {
         $this->authorize();
 

@@ -14,25 +14,30 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
-    {{-- Compiled assets --}}
-    @if(file_exists(public_path('vendor/laraviz/manifest.json')))
-        @php
-            $manifest = json_decode(file_get_contents(public_path('vendor/laraviz/manifest.json')), true);
-        @endphp
-        @foreach($manifest as $src => $entry)
-            @if(isset($entry['isEntry']) && $entry['isEntry'])
-                @if(isset($entry['css']))
-                    @foreach($entry['css'] as $css)
-                        <link rel="stylesheet" href="{{ asset('vendor/laraviz/' . $css) }}" />
-                    @endforeach
-                @endif
-            @endif
-        @endforeach
-    @else
-        {{-- Dev mode: Vite dev server --}}
-        <script type="module" src="http://localhost:5173/@vite/client"></script>
-        <script type="module" src="http://localhost:5173/resources/js/main.js"></script>
-    @endif
+    {{-- Load compiled assets from manifest --}}
+    @php
+        $manifestPath = public_path('vendor/laraviz/.vite/manifest.json');
+        $manifest = [];
+        if (file_exists($manifestPath)) {
+            $manifest = json_decode(file_get_contents($manifestPath), true) ?? [];
+        }
+
+        // Find the CSS and JS entry files
+        $cssFiles = [];
+        $jsEntry  = null;
+        foreach ($manifest as $src => $entry) {
+            if (! empty($entry['isEntry'])) {
+                $jsEntry = $entry['file'] ?? null;
+                foreach ($entry['css'] ?? [] as $css) {
+                    $cssFiles[] = $css;
+                }
+            }
+        }
+    @endphp
+
+    @foreach($cssFiles as $css)
+        <link rel="stylesheet" href="{{ asset('vendor/laraviz/' . $css) }}" />
+    @endforeach
 
     <style>
         :root {
@@ -85,9 +90,7 @@
             background-clip: text;
         }
 
-        .loader-logo span {
-            font-weight: 300;
-        }
+        .loader-logo span { font-weight: 300; }
 
         .loader-bar-wrap {
             width: 200px;
@@ -116,45 +119,64 @@
             font-family: 'JetBrains Mono', monospace;
             letter-spacing: 0.05em;
         }
+
+        @if(is_null($jsEntry))
+        /* No built assets found */
+        #laraviz-missing {
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: #050a14; gap: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        @endif
     </style>
 </head>
 <body>
 
-{{-- Loading screen --}}
-<div id="laraviz-loader">
-    <div class="loader-logo">Lara<span>Viz</span></div>
-    <div class="loader-bar-wrap">
-        <div class="loader-bar"></div>
+@if(is_null($jsEntry))
+    {{-- Assets not built yet --}}
+    <div id="laraviz-missing" style="color:#e2e8f0;text-align:center;padding:2rem">
+        <div style="font-size:3rem">🔭</div>
+        <h2 style="font-size:1.25rem;font-weight:700;background:linear-gradient(135deg,#00d4ff,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent">LaraViz</h2>
+        <p style="color:#64748b;font-size:.875rem;margin-top:.5rem">Assets not built yet.</p>
+        <p style="color:#475569;font-size:.75rem;margin-top:1.5rem;max-width:420px;line-height:1.6">
+            Run the following commands:
+        </p>
+        <pre style="background:#0d1526;border:1px solid #1e3a5f;border-radius:8px;padding:1rem;margin-top:.75rem;text-align:left;font-size:.7rem;color:#94a3b8;line-height:1.8">cd {{ base_path('vendor/laraviz/laraviz') }}
+npm install
+npm run build
+
+# Then in your Laravel project:
+php artisan vendor:publish --tag=laraviz-assets --force</pre>
     </div>
-    <div class="loader-hint">Analyzing your application...</div>
-</div>
+@else
+    {{-- Loading screen --}}
+    <div id="laraviz-loader">
+        <div class="loader-logo">Lara<span>Viz</span></div>
+        <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+        <div class="loader-hint">Analyzing your application...</div>
+    </div>
 
-{{-- Vue SPA mount point --}}
-<div id="app"></div>
+    {{-- Vue SPA mount point --}}
+    <div id="app"></div>
 
-{{-- Bootstrap data injected from PHP --}}
-<script>
-    window.__LARAVIZ__ = {
-        apiBase: "{{ url(config('laraviz.route_prefix', 'laraviz') . '/api') }}",
-        routePrefix: "{{ config('laraviz.route_prefix', 'laraviz') }}",
-        appName: "{{ config('app.name', 'Laravel') }}",
-        environment: "{{ app()->environment() }}",
-        theme: "{{ config('laraviz.theme', 'dark') }}",
-        csrfToken: "{{ csrf_token() }}",
-        laravelVersion: "{{ app()->version() }}",
-        phpVersion: "{{ PHP_VERSION }}",
-    };
-</script>
+    {{-- Bootstrap data injected from PHP --}}
+    <script>
+        window.__LARAVIZ__ = {
+            apiBase: "{{ url(config('laraviz.route_prefix', 'laraviz') . '/api') }}",
+            routePrefix: "{{ config('laraviz.route_prefix', 'laraviz') }}",
+            appName: "{{ addslashes(config('app.name', 'Laravel')) }}",
+            environment: "{{ app()->environment() }}",
+            theme: "{{ config('laraviz.theme', 'dark') }}",
+            csrfToken: "{{ csrf_token() }}",
+            laravelVersion: "{{ app()->version() }}",
+            phpVersion: "{{ PHP_VERSION }}",
+        };
+    </script>
 
-@if(file_exists(public_path('vendor/laraviz/manifest.json')))
-    @php
-        $manifest = json_decode(file_get_contents(public_path('vendor/laraviz/manifest.json')), true);
-    @endphp
-    @foreach($manifest as $src => $entry)
-        @if(isset($entry['isEntry']) && $entry['isEntry'])
-            <script type="module" src="{{ asset('vendor/laraviz/' . $entry['file']) }}"></script>
-        @endif
-    @endforeach
+    {{-- Main JS bundle --}}
+    <script type="module" src="{{ asset('vendor/laraviz/' . $jsEntry) }}"></script>
 @endif
 
 </body>

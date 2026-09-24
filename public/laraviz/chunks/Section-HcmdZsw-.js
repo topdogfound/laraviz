@@ -1,0 +1,1 @@
+import{o as s,c as a,a as o,t as c,m as r}from"../main-CZVmGBlL.js";const i={class:"space-y-2"},n={class:"text-[10px] font-semibold uppercase tracking-widest text-slate-500"},_={__name:"Section",props:{title:String},setup(t){return(e,l)=>(s(),a("div",i,[o("div",n,c(t.title),1),r(e.$slots,"default")]))}};export{_};
