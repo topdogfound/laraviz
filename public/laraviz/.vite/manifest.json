@@ -1,14 +1,18 @@
 {
-  "_CanvasView-!~{002}~.js": {
+  "_CanvasView-!~{006}~.js": {
     "file": "assets/CanvasView-az4xNHSu.css",
-    "src": "_CanvasView-!~{002}~.js"
+    "src": "_CanvasView-!~{006}~.js"
   },
-  "_CanvasView-Ch7NbBZG.js": {
-    "file": "chunks/CanvasView-Ch7NbBZG.js",
+  "_CanvasView-DgWbS0zq.js": {
+    "file": "chunks/CanvasView-DgWbS0zq.js",
     "name": "CanvasView",
     "isDynamicEntry": true,
     "imports": [
-      "resources/js/main.js"
+      "resources/js/main.js",
+      "resources/js/stores/database.js",
+      "resources/js/stores/routes.js",
+      "resources/js/stores/models.js",
+      "resources/js/stores/services.js"
     ],
     "dynamicImports": [
       "resources/js/components/ui/icons/IconGrid.vue",
@@ -19,7 +23,6 @@
       "resources/js/components/ui/icons/IconEvent.vue",
       "resources/js/components/ui/icons/IconJob.vue",
       "resources/js/components/ui/icons/IconFlow.vue",
-      "resources/js/main.js",
       "resources/js/components/ui/details/TableDetail.vue",
       "resources/js/components/ui/details/ModelDetail.vue",
       "resources/js/components/ui/details/RouteDetail.vue",
@@ -31,174 +34,245 @@
       "assets/CanvasView-az4xNHSu.css"
     ]
   },
-  "_Section-HcmdZsw-.js": {
-    "file": "chunks/Section-HcmdZsw-.js",
+  "_Section-ncUjZiq9.js": {
+    "file": "chunks/Section-ncUjZiq9.js",
     "name": "Section",
     "imports": [
       "resources/js/main.js"
     ]
   },
-  "_StatCard-CvL16VsB.js": {
-    "file": "chunks/StatCard-CvL16VsB.js",
+  "_StatCard-zQ2Y3KCG.js": {
+    "file": "chunks/StatCard-zQ2Y3KCG.js",
     "name": "StatCard",
     "imports": [
       "resources/js/main.js"
     ]
   },
   "resources/js/components/ui/details/EventDetail.vue": {
-    "file": "chunks/EventDetail-CDRqRyPj.js",
+    "file": "chunks/EventDetail-Cw7g_QT3.js",
     "name": "EventDetail",
     "src": "resources/js/components/ui/details/EventDetail.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_StatCard-CvL16VsB.js",
-      "_Section-HcmdZsw-.js",
+      "_StatCard-zQ2Y3KCG.js",
+      "_Section-ncUjZiq9.js",
       "resources/js/main.js"
     ]
   },
   "resources/js/components/ui/details/JobDetail.vue": {
-    "file": "chunks/JobDetail-FLCWuPk_.js",
+    "file": "chunks/JobDetail-D8k9Rd_I.js",
     "name": "JobDetail",
     "src": "resources/js/components/ui/details/JobDetail.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_Section-HcmdZsw-.js",
+      "_Section-ncUjZiq9.js",
       "resources/js/main.js"
     ]
   },
   "resources/js/components/ui/details/ModelDetail.vue": {
-    "file": "chunks/ModelDetail-4QGm4zT9.js",
+    "file": "chunks/ModelDetail-C2OgwwCQ.js",
     "name": "ModelDetail",
     "src": "resources/js/components/ui/details/ModelDetail.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_StatCard-CvL16VsB.js",
-      "_Section-HcmdZsw-.js",
+      "_StatCard-zQ2Y3KCG.js",
+      "_Section-ncUjZiq9.js",
       "resources/js/main.js"
     ]
   },
   "resources/js/components/ui/details/RouteDetail.vue": {
-    "file": "chunks/RouteDetail-3cVoKLax.js",
+    "file": "chunks/RouteDetail-Be8EOoyk.js",
     "name": "RouteDetail",
     "src": "resources/js/components/ui/details/RouteDetail.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_Section-HcmdZsw-.js",
+      "_Section-ncUjZiq9.js",
       "resources/js/main.js"
     ]
   },
   "resources/js/components/ui/details/ServiceDetail.vue": {
-    "file": "chunks/ServiceDetail-uemy0PEf.js",
+    "file": "chunks/ServiceDetail-CvYOd-2B.js",
     "name": "ServiceDetail",
     "src": "resources/js/components/ui/details/ServiceDetail.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_Section-HcmdZsw-.js",
+      "_Section-ncUjZiq9.js",
       "resources/js/main.js"
     ]
   },
   "resources/js/components/ui/details/TableDetail.vue": {
-    "file": "chunks/TableDetail-BDCmOzjY.js",
+    "file": "chunks/TableDetail-qY-ARFco.js",
     "name": "TableDetail",
     "src": "resources/js/components/ui/details/TableDetail.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_StatCard-CvL16VsB.js",
-      "_Section-HcmdZsw-.js",
+      "_StatCard-zQ2Y3KCG.js",
+      "_Section-ncUjZiq9.js",
       "resources/js/main.js"
     ]
   },
   "resources/js/components/ui/icons/IconDatabase.vue": {
-    "file": "chunks/IconDatabase-DF5Jiq3f.js",
+    "file": "chunks/IconDatabase-DoEVqMYG.js",
     "name": "IconDatabase",
     "src": "resources/js/components/ui/icons/IconDatabase.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_CanvasView-Ch7NbBZG.js",
-      "resources/js/main.js"
+      "_CanvasView-DgWbS0zq.js",
+      "resources/js/main.js",
+      "resources/js/stores/database.js",
+      "resources/js/stores/routes.js",
+      "resources/js/stores/models.js",
+      "resources/js/stores/services.js"
     ]
   },
   "resources/js/components/ui/icons/IconEvent.vue": {
-    "file": "chunks/IconEvent-B1i-4BWW.js",
+    "file": "chunks/IconEvent-CxzCEibC.js",
     "name": "IconEvent",
     "src": "resources/js/components/ui/icons/IconEvent.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_CanvasView-Ch7NbBZG.js",
-      "resources/js/main.js"
+      "_CanvasView-DgWbS0zq.js",
+      "resources/js/main.js",
+      "resources/js/stores/database.js",
+      "resources/js/stores/routes.js",
+      "resources/js/stores/models.js",
+      "resources/js/stores/services.js"
     ]
   },
   "resources/js/components/ui/icons/IconFlow.vue": {
-    "file": "chunks/IconFlow-BxGXwhle.js",
+    "file": "chunks/IconFlow-HkMSQK0I.js",
     "name": "IconFlow",
     "src": "resources/js/components/ui/icons/IconFlow.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_CanvasView-Ch7NbBZG.js",
-      "resources/js/main.js"
+      "_CanvasView-DgWbS0zq.js",
+      "resources/js/main.js",
+      "resources/js/stores/database.js",
+      "resources/js/stores/routes.js",
+      "resources/js/stores/models.js",
+      "resources/js/stores/services.js"
     ]
   },
   "resources/js/components/ui/icons/IconGrid.vue": {
-    "file": "chunks/IconGrid-BvQv9Bp3.js",
+    "file": "chunks/IconGrid-BhQ4KalI.js",
     "name": "IconGrid",
     "src": "resources/js/components/ui/icons/IconGrid.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_CanvasView-Ch7NbBZG.js",
-      "resources/js/main.js"
+      "_CanvasView-DgWbS0zq.js",
+      "resources/js/main.js",
+      "resources/js/stores/database.js",
+      "resources/js/stores/routes.js",
+      "resources/js/stores/models.js",
+      "resources/js/stores/services.js"
     ]
   },
   "resources/js/components/ui/icons/IconJob.vue": {
-    "file": "chunks/IconJob-Bf_DWP7B.js",
+    "file": "chunks/IconJob-BZayh5R6.js",
     "name": "IconJob",
     "src": "resources/js/components/ui/icons/IconJob.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_CanvasView-Ch7NbBZG.js",
-      "resources/js/main.js"
+      "_CanvasView-DgWbS0zq.js",
+      "resources/js/main.js",
+      "resources/js/stores/database.js",
+      "resources/js/stores/routes.js",
+      "resources/js/stores/models.js",
+      "resources/js/stores/services.js"
     ]
   },
   "resources/js/components/ui/icons/IconModel.vue": {
-    "file": "chunks/IconModel-DUO1Qx-m.js",
+    "file": "chunks/IconModel-B3idVrle.js",
     "name": "IconModel",
     "src": "resources/js/components/ui/icons/IconModel.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_CanvasView-Ch7NbBZG.js",
-      "resources/js/main.js"
+      "_CanvasView-DgWbS0zq.js",
+      "resources/js/main.js",
+      "resources/js/stores/database.js",
+      "resources/js/stores/routes.js",
+      "resources/js/stores/models.js",
+      "resources/js/stores/services.js"
     ]
   },
   "resources/js/components/ui/icons/IconRoute.vue": {
-    "file": "chunks/IconRoute-CSo4FbHT.js",
+    "file": "chunks/IconRoute-FLQ46qof.js",
     "name": "IconRoute",
     "src": "resources/js/components/ui/icons/IconRoute.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_CanvasView-Ch7NbBZG.js",
-      "resources/js/main.js"
+      "_CanvasView-DgWbS0zq.js",
+      "resources/js/main.js",
+      "resources/js/stores/database.js",
+      "resources/js/stores/routes.js",
+      "resources/js/stores/models.js",
+      "resources/js/stores/services.js"
     ]
   },
   "resources/js/components/ui/icons/IconService.vue": {
-    "file": "chunks/IconService-k95DPCm6.js",
+    "file": "chunks/IconService-B37aXpF0.js",
     "name": "IconService",
     "src": "resources/js/components/ui/icons/IconService.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_CanvasView-Ch7NbBZG.js",
-      "resources/js/main.js"
+      "_CanvasView-DgWbS0zq.js",
+      "resources/js/main.js",
+      "resources/js/stores/database.js",
+      "resources/js/stores/routes.js",
+      "resources/js/stores/models.js",
+      "resources/js/stores/services.js"
     ]
   },
   "resources/js/main.js": {
-    "file": "main-CZVmGBlL.js",
+    "file": "main-Cyj6bIfh.js",
     "name": "main",
     "src": "resources/js/main.js",
     "isEntry": true,
-    "isDynamicEntry": true,
     "dynamicImports": [
-      "_CanvasView-Ch7NbBZG.js"
+      "resources/js/stores/database.js",
+      "resources/js/stores/routes.js",
+      "resources/js/stores/models.js",
+      "resources/js/stores/services.js",
+      "_CanvasView-DgWbS0zq.js"
     ],
     "css": [
-      "assets/main-DJz07c_b.css"
+      "assets/main-B4magPsJ.css"
+    ]
+  },
+  "resources/js/stores/database.js": {
+    "file": "chunks/database-BkAmLNeM.js",
+    "name": "database",
+    "src": "resources/js/stores/database.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/main.js"
+    ]
+  },
+  "resources/js/stores/models.js": {
+    "file": "chunks/models-BhA7KL4z.js",
+    "name": "models",
+    "src": "resources/js/stores/models.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/main.js"
+    ]
+  },
+  "resources/js/stores/routes.js": {
+    "file": "chunks/routes-BR91I0Zn.js",
+    "name": "routes",
+    "src": "resources/js/stores/routes.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/main.js"
+    ]
+  },
+  "resources/js/stores/services.js": {
+    "file": "chunks/services-CtddW7-p.js",
+    "name": "services",
+    "src": "resources/js/stores/services.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/main.js"
     ]
   }
 }

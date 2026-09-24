@@ -4,12 +4,17 @@
     "keywords": ["laravel", "visualization", "canvas", "database", "routes", "debug", "dev-tools"],
     "license": "MIT",
     "type": "library",
+    "homepage": "https://github.com/topdogfound/laraviz",
     "authors": [
         {
             "name": "LaraViz",
             "email": "hello@laraviz.dev"
         }
     ],
+    "support": {
+        "issues": "https://github.com/topdogfound/laraviz/issues",
+        "source": "https://github.com/topdogfound/laraviz"
+    },
     "require": {
         "php": "^8.1",
         "illuminate/support": "^10.0|^11.0|^12.0",
