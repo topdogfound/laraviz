@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LaraViz — Laravel Application Visualizer</title>
+  <meta name="description" content="Interactive canvas-based visualization of your entire Laravel application. Database schema, routes, models, events, jobs, and the full request lifecycle — all on one canvas." />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="LaraViz — Laravel Application Visualizer" />
+  <meta property="og:description" content="See your entire Laravel app on a zoomable, pannable canvas. Database, routes, models, events, jobs, and flow — all in one place." />
+  <meta property="og:url" content="https://topdogfound.github.io/laraviz" />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --bg2:       #161b22;
+      --bg3:       #1c2230;
+      --border:    rgba(255,255,255,0.08);
+      --cyan:      #22d3ee;
+      --cyan-dim:  rgba(34,211,238,0.15);
+      --purple:    #a78bfa;
+      --purple-dim:rgba(167,139,250,0.15);
+      --green:     #4ade80;
+      --orange:    #fb923c;
+      --red:       #f87171;
+      --yellow:    #facc15;
+      --text:      #e2e8f0;
+      --text-muted:#94a3b8;
+      --radius:    12px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* ── GLOW BLOBS ── */
+    .blob {
+      position: fixed; border-radius: 50%;
+      filter: blur(120px); opacity: 0.12;
+      pointer-events: none; z-index: 0;
+    }
+    .blob-1 { width: 600px; height: 600px; background: var(--cyan);   top: -200px; left: -200px; }
+    .blob-2 { width: 500px; height: 500px; background: var(--purple); bottom: -150px; right: -150px; }
+
+    /* ── LAYOUT ── */
+    .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      background: rgba(13,17,23,0.8);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 1.1rem; text-decoration: none; color: var(--text);
+    }
+    .logo-badge {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.9rem; color: #0d1117;
+    }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a {
+      color: var(--text-muted); text-decoration: none; font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 18px; border-radius: 8px; font-size: 0.875rem;
+      font-weight: 600; text-decoration: none; transition: all 0.2s; cursor: pointer;
+      border: none; font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--cyan); color: #0d1117;
+    }
+    .btn-primary:hover { background: #67e8f9; transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent; color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 100px 0 80px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--cyan-dim); border: 1px solid rgba(34,211,238,0.3);
+      color: var(--cyan); border-radius: 100px;
+      padding: 6px 16px; font-size: 0.8rem; font-weight: 600;
+      margin-bottom: 28px; letter-spacing: 0.05em;
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 800; line-height: 1.15;
+      letter-spacing: -0.02em; margin-bottom: 20px;
+    }
+    .hero h1 span {
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.15rem; color: var(--text-muted);
+      max-width: 600px; margin: 0 auto 40px;
+    }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-lg { padding: 12px 28px; font-size: 1rem; border-radius: 10px; }
+
+    /* ── INSTALL BLOCK ── */
+    .install-block {
+      margin: 56px auto 0;
+      max-width: 520px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .install-block-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem; color: var(--text-muted);
+    }
+    .install-dots { display: flex; gap: 6px; }
+    .install-dots span {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .install-dots span:nth-child(1) { background: #f87171; }
+    .install-dots span:nth-child(2) { background: #facc15; }
+    .install-dots span:nth-child(3) { background: #4ade80; }
+    .install-code {
+      padding: 18px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      line-height: 2;
+    }
+    .install-code .prompt { color: var(--text-muted); user-select: none; }
+    .install-code .cmd { color: var(--cyan); }
+    .install-code .arg { color: var(--purple); }
+
+    /* ── SCREENSHOT MOCK ── */
+    .screenshot-wrap {
+      margin: 64px auto 0;
+      max-width: 900px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.1);
+    }
+    .screenshot-bar {
+      background: var(--bg2);
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .screenshot-bar .dots { display: flex; gap: 6px; }
+    .screenshot-bar .dots span { width: 12px; height: 12px; border-radius: 50%; }
+    .screenshot-bar .dots span:nth-child(1) { background: #f87171; }
+    .screenshot-bar .dots span:nth-child(2) { background: #facc15; }
+    .screenshot-bar .dots span:nth-child(3) { background: #4ade80; }
+    .screenshot-url {
+      flex: 1; background: var(--bg3);
+      border-radius: 6px; padding: 5px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem; color: var(--text-muted);
+      text-align: center;
+    }
+    .screenshot-body {
+      background: var(--bg);
+      display: flex; min-height: 380px;
+    }
+    /* Sidebar */
+    .mock-sidebar {
+      width: 160px; min-width: 160px;
+      border-right: 1px solid var(--border);
+      padding: 16px 0;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .mock-sidebar-label {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+      color: var(--text-muted); padding: 8px 16px 4px;
+      text-transform: uppercase;
+    }
+    .mock-nav-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 16px; font-size: 0.78rem; color: var(--text-muted);
+      border-left: 2px solid transparent;
+    }
+    .mock-nav-item.active {
+      color: var(--cyan); border-left-color: var(--cyan);
+      background: var(--cyan-dim);
+    }
+    .mock-nav-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0;
+    }
+    /* Main area */
+    .mock-main { flex: 1; padding: 24px; overflow: hidden; }
+    .mock-title { font-size: 1.1rem; font-weight: 700; color: var(--cyan); margin-bottom: 4px; }
+    .mock-sub { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 20px; }
+    .mock-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .mock-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px;
+    }
+    .mock-card-icon { font-size: 1.1rem; margin-bottom: 6px; }
+    .mock-card-num { font-size: 1.4rem; font-weight: 800; }
+    .mock-card-num.cyan   { color: var(--cyan); }
+    .mock-card-num.purple { color: var(--purple); }
+    .mock-card-num.green  { color: var(--green); }
+    .mock-card-num.orange { color: var(--orange); }
+    .mock-card-label { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
+    .mock-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .mock-panel {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px;
+    }
+    .mock-panel-title {
+      font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+      margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.07em;
+    }
+    .mock-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .mock-bar-label { font-size: 0.65rem; color: var(--text-muted); width: 40px; flex-shrink: 0; }
+    .mock-bar-track { flex: 1; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+    .mock-bar-fill { height: 100%; border-radius: 3px; }
+    .mock-bar-count { font-size: 0.65rem; color: var(--text-muted); width: 20px; text-align: right; }
+    .mock-db-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .mock-db-name { font-size: 0.72rem; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+    .mock-db-badge { font-size: 0.6rem; color: var(--cyan); background: var(--cyan-dim); border-radius: 4px; padding: 2px 6px; }
+
+    /* ── FEATURES ── */
+    .section { padding: 80px 0; }
+    .section-label {
+      display: inline-block;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--cyan);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800; line-height: 1.2;
+      letter-spacing: -0.02em; margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 1rem; color: var(--text-muted); max-width: 560px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px; margin-top: 48px;
+    }
+    .feature-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .feature-card:hover {
+      border-color: rgba(34,211,238,0.3);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; margin-bottom: 14px;
+    }
+    .feature-icon.cyan   { background: var(--cyan-dim); }
+    .feature-icon.purple { background: var(--purple-dim); }
+    .feature-icon.green  { background: rgba(74,222,128,0.12); }
+    .feature-icon.orange { background: rgba(251,146,60,0.12); }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p  { font-size: 0.875rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── STEPS ── */
+    .steps { margin-top: 48px; display: flex; flex-direction: column; gap: 0; }
+    .step {
+      display: flex; gap: 24px; align-items: flex-start;
+      padding: 28px 0; border-bottom: 1px solid var(--border);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 40px; height: 40px; flex-shrink: 0;
+      border-radius: 50%; border: 1px solid var(--cyan);
+      color: var(--cyan); font-weight: 700; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-body h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+    .step-body p  { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 10px; }
+    .code-pill {
+      display: inline-block;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem; color: var(--cyan);
+    }
+
+    /* ── CANVASES ── */
+    .canvases-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px; margin-top: 48px;
+    }
+    .canvas-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      display: flex; gap: 14px; align-items: flex-start;
+      transition: border-color 0.2s;
+    }
+    .canvas-card:hover { border-color: rgba(167,139,250,0.4); }
+    .canvas-card-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .canvas-card h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+    .canvas-card p  { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* ── STACK ── */
+    .stack-grid {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 40px;
+    }
+    .stack-pill {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 100px; padding: 8px 16px;
+      font-size: 0.82rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .stack-pill span { color: var(--text); font-weight: 600; }
+
+    /* ── CTA ── */
+    .cta-section {
+      padding: 80px 0;
+      text-align: center;
+    }
+    .cta-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 64px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-box::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(34,211,238,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-box h2 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 800; margin-bottom: 16px;
+    }
+    .cta-box p { color: var(--text-muted); margin-bottom: 32px; font-size: 1rem; }
+    .cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+    }
+    .footer-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+      font-size: 0.82rem; color: var(--text-muted);
+    }
+    .footer-inner a { color: var(--text-muted); text-decoration: none; }
+    .footer-inner a:hover { color: var(--cyan); }
+    .footer-links { display: flex; gap: 20px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .mock-cards { grid-template-columns: repeat(2,1fr); }
+      .mock-bottom { grid-template-columns: 1fr; }
+      .mock-sidebar { display: none; }
+      .footer-inner { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="wrap nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="logo-badge">LV</div>
+      LaraViz
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#canvases">Canvases</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/topdogfound/laraviz" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://packagist.org/packages/laraviz/laraviz" target="_blank" rel="noopener" class="btn btn-primary">Get Started</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-badge">✦ Open Source · MIT License · Laravel 10/11/12</div>
+    <h1>See your entire<br /><span>Laravel app at a glance</span></h1>
+    <p>
+      Database schema, routes, models, events, jobs, and the full request lifecycle —
+      all on a zoomable, pannable, interactive canvas with a dark futuristic UI.
+    </p>
+    <div class="hero-actions">
+      <a href="https://packagist.org/packages/laraviz/laraviz" target="_blank" rel="noopener" class="btn btn-primary btn-lg">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Install via Composer
+      </a>
+      <a href="https://github.com/topdogfound/laraviz" target="_blank" rel="noopener" class="btn btn-ghost btn-lg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+
+    <!-- Install Block -->
+    <div class="install-block">
+      <div class="install-block-header">
+        <div class="install-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span>terminal</span>
+        <span></span>
+      </div>
+      <div class="install-code">
+        <div><span class="prompt">$ </span><span class="cmd">composer require</span> <span class="arg">laraviz/laraviz</span> <span class="arg">--dev</span></div>
+        <div><span class="prompt">$ </span><span class="cmd">php artisan</span> <span class="arg">laraviz:install</span></div>
+        <div><span class="prompt">$ </span><span style="color:#4ade80">open http://your-app.test/laraviz</span></div>
+      </div>
+    </div>
+
+    <!-- App Mock -->
+    <div class="screenshot-wrap">
+      <div class="screenshot-bar">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="screenshot-url">http://your-app.test/laraviz</div>
+      </div>
+      <div class="screenshot-body">
+        <!-- Sidebar -->
+        <div class="mock-sidebar">
+          <div class="mock-sidebar-label">Visualize</div>
+          <div class="mock-nav-item active"><div class="mock-nav-dot"></div> Overview</div>
+          <div class="mock-nav-item"><div class="mock-nav-dot"></div> Database</div>
+          <div class="mock-nav-item"><div class="mock-nav-dot"></div> Routes</div>
+          <div class="mock-nav-item"><div class="mock-nav-dot"></div> Models</div>
+          <div class="mock-sidebar-label">Analyze</div>
+          <div class="mock-nav-item"><div class="mock-nav-dot"></div> Services</div>
+          <div class="mock-nav-item"><div class="mock-nav-dot"></div> Events</div>
+          <div class="mock-nav-item"><div class="mock-nav-dot"></div> Jobs</div>
+          <div class="mock-nav-item"><div class="mock-nav-dot"></div> App Flow</div>
+        </div>
+        <!-- Main -->
+        <div class="mock-main">
+          <div class="mock-title">my-laravel-app</div>
+          <div class="mock-sub">Laravel 12.x · PHP 8.3 · local &nbsp;·&nbsp; Analyzed just now</div>
+          <div class="mock-cards">
+            <div class="mock-card">
+              <div class="mock-card-icon">🗄️</div>
+              <div class="mock-card-num cyan">14</div>
+              <div class="mock-card-label">Tables</div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-card-icon">🛣️</div>
+              <div class="mock-card-num orange">37</div>
+              <div class="mock-card-label">Routes</div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-card-icon">🧩</div>
+              <div class="mock-card-num purple">8</div>
+              <div class="mock-card-label">Models</div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-card-icon">⚙️</div>
+              <div class="mock-card-num green">32</div>
+              <div class="mock-card-label">Providers</div>
+            </div>
+          </div>
+          <div class="mock-bottom">
+            <div class="mock-panel">
+              <div class="mock-panel-title">Route Methods</div>
+              <div class="mock-bar-row">
+                <div class="mock-bar-label" style="color:#4ade80">GET</div>
+                <div class="mock-bar-track"><div class="mock-bar-fill" style="width:75%;background:#4ade80"></div></div>
+                <div class="mock-bar-count">26</div>
+              </div>
+              <div class="mock-bar-row">
+                <div class="mock-bar-label" style="color:#f87171">DELETE</div>
+                <div class="mock-bar-track"><div class="mock-bar-fill" style="width:22%;background:#f87171"></div></div>
+                <div class="mock-bar-count">4</div>
+              </div>
+              <div class="mock-bar-row">
+                <div class="mock-bar-label" style="color:#60a5fa">POST</div>
+                <div class="mock-bar-track"><div class="mock-bar-fill" style="width:18%;background:#60a5fa"></div></div>
+                <div class="mock-bar-count">3</div>
+              </div>
+              <div class="mock-bar-row">
+                <div class="mock-bar-label" style="color:#facc15">PUT</div>
+                <div class="mock-bar-track"><div class="mock-bar-fill" style="width:15%;background:#facc15"></div></div>
+                <div class="mock-bar-count">4</div>
+              </div>
+            </div>
+            <div class="mock-panel">
+              <div class="mock-panel-title">Database</div>
+              <div class="mock-db-row">
+                <div class="mock-db-name">users</div>
+                <div class="mock-db-badge">12 cols</div>
+              </div>
+              <div class="mock-db-row">
+                <div class="mock-db-name">orders</div>
+                <div class="mock-db-badge">9 cols</div>
+              </div>
+              <div class="mock-db-row">
+                <div class="mock-db-name">products</div>
+                <div class="mock-db-badge">7 cols</div>
+              </div>
+              <div class="mock-db-row">
+                <div class="mock-db-name">migrations</div>
+                <div class="mock-db-badge">3 cols</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="section-label">Why LaraViz</div>
+    <h2 class="section-title">Everything your app is doing,<br />made visible</h2>
+    <p class="section-sub">Stop grepping through files to understand your own codebase. LaraViz surfaces the structure and relationships that matter.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon cyan">🗄️</div>
+        <h3>Database Schema</h3>
+        <p>Tables, columns, indexes, and foreign key edges — rendered as a live relationship graph. Works with MySQL, PostgreSQL, and SQLite.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon purple">🛣️</div>
+        <h3>Route Explorer</h3>
+        <p>Every route with its HTTP method, middleware stack, and controller. Grouped or flat view. Spot dead or duplicate routes instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon green">🧩</div>
+        <h3>Eloquent Model Graph</h3>
+        <p>Models and their relationships — HasMany, BelongsTo, ManyToMany — drawn as edges so you can trace data flow at a glance.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon orange">⚡</div>
+        <h3>Events &amp; Listeners</h3>
+        <p>The full event fan-out in one view. Queued listeners are flagged, so you know which events are processed synchronously vs. async.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon cyan">🔧</div>
+        <h3>Service Providers</h3>
+        <p>Container bindings, facades, and service providers — see exactly what is registered and where it comes from.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon purple">💼</div>
+        <h3>Queue Jobs</h3>
+        <p>Every job with its queue driver, queue name, retry config, and timeout. Understand your async workload at a glance.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon green">🌊</div>
+        <h3>App Flow</h3>
+        <p>A visual walkthrough of the full request lifecycle, queue processing flow, and event dispatch chain.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon orange">🔒</div>
+        <h3>Safe by Default</h3>
+        <p>Blocked in production via a Gate. Config values with secret/key/token are automatically redacted. No data leaves your server.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CANVASES -->
+<section class="section" id="canvases" style="background: linear-gradient(to bottom, transparent, rgba(22,27,34,0.5), transparent);">
+  <div class="wrap">
+    <div class="section-label">Eight Canvases</div>
+    <h2 class="section-title">One package, every perspective</h2>
+    <p class="section-sub">Each canvas is a focused, interactive view. Zoom, pan, click nodes for detail panels.</p>
+
+    <div class="canvases-grid">
+      <div class="canvas-card"><div class="canvas-card-icon">📊</div><div><h3>Overview</h3><p>App stats, config snapshot, quick navigation to any canvas</p></div></div>
+      <div class="canvas-card"><div class="canvas-card-icon">🗄️</div><div><h3>Database</h3><p>Schema graph with FK relationships and index annotations</p></div></div>
+      <div class="canvas-card"><div class="canvas-card-icon">🛣️</div><div><h3>Routes</h3><p>Grouped or flat route tree with method badges and middleware</p></div></div>
+      <div class="canvas-card"><div class="canvas-card-icon">🧩</div><div><h3>Models</h3><p>Eloquent relationship graph with edge labels</p></div></div>
+      <div class="canvas-card"><div class="canvas-card-icon">🔧</div><div><h3>Services</h3><p>Providers, bindings, and facade aliases</p></div></div>
+      <div class="canvas-card"><div class="canvas-card-icon">⚡</div><div><h3>Events</h3><p>Event → listener fan-out with queue indicators</p></div></div>
+      <div class="canvas-card"><div class="canvas-card-icon">💼</div><div><h3>Jobs</h3><p>Queue jobs with driver, queue name, tries, timeout</p></div></div>
+      <div class="canvas-card"><div class="canvas-card-icon">🌊</div><div><h3>App Flow</h3><p>Request lifecycle, queue flow, event dispatch flow</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section class="section" id="install">
+  <div class="wrap">
+    <div class="section-label">Get Started</div>
+    <h2 class="section-title">Up and running in<br />three commands</h2>
+    <p class="section-sub">No Node.js required in production — pre-built assets are bundled with the package.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Install the package</h3>
+          <p>Add LaraViz as a dev dependency via Composer.</p>
+          <div class="code-pill">composer require laraviz/laraviz --dev</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Publish config &amp; assets</h3>
+          <p>The install command copies the config and pre-built frontend assets into your public directory.</p>
+          <div class="code-pill">php artisan laraviz:install</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Open in your browser</h3>
+          <p>Navigate to the LaraViz URL in your local app. The dashboard loads instantly — no build step needed.</p>
+          <div class="code-pill">http://your-app.test/laraviz</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STACK -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-label">Tech Stack</div>
+    <h2 class="section-title">Built on familiar tools</h2>
+    <div class="stack-grid">
+      <div class="stack-pill">🐘 <span>PHP 8.1+</span></div>
+      <div class="stack-pill">⚡ <span>Laravel 10 / 11 / 12</span></div>
+      <div class="stack-pill">💚 <span>Vue 3</span></div>
+      <div class="stack-pill">⚡ <span>Vite</span></div>
+      <div class="stack-pill">🎨 <span>Tailwind CSS v3</span></div>
+      <div class="stack-pill">🗺️ <span>Vue Flow (@xyflow)</span></div>
+      <div class="stack-pill">🍍 <span>Pinia</span></div>
+      <div class="stack-pill">🔀 <span>Vue Router</span></div>
+      <div class="stack-pill">📡 <span>Axios</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="wrap">
+    <div class="cta-box">
+      <h2>Ready to see inside your app?</h2>
+      <p>Free, open source, MIT licensed. Works with any Laravel 10/11/12 project.</p>
+      <div class="cta-actions">
+        <a href="https://packagist.org/packages/laraviz/laraviz" target="_blank" rel="noopener" class="btn btn-primary btn-lg">
+          Install via Composer
+        </a>
+        <a href="https://github.com/topdogfound/laraviz" target="_blank" rel="noopener" class="btn btn-ghost btn-lg">
+          Star on GitHub ⭐
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap footer-inner">
+    <div>
+      Built with ❤️ by <a href="https://github.com/topdogfound" target="_blank" rel="noopener">topdogfound</a>
+      · MIT License
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/topdogfound/laraviz" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://packagist.org/packages/laraviz/laraviz" target="_blank" rel="noopener">Packagist</a>
+      <a href="https://github.com/topdogfound/laraviz/issues" target="_blank" rel="noopener">Issues</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
