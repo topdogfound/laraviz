@@ -105,10 +105,9 @@
 
 <script setup>
 import { ref } from 'vue'
-import { VueFlow, useVueFlow, BackgroundVariant } from '@vue-flow/core'
-import { Background, MiniMap, Controls } from '@vue-flow/additional-components'
+import { VueFlow, useVueFlow } from '@vue-flow/core'
+import { Background, MiniMap, Controls, BackgroundVariant } from '@vue-flow/additional-components'
 import '@vue-flow/core/dist/style.css'
-import '@vue-flow/additional-components/dist/style.css'
 
 const props = defineProps({
     nodes:       { type: Array, default: () => [] },
